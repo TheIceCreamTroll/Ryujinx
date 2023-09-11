@@ -109,19 +109,18 @@ namespace Ryujinx.Ava.Common
                 return;
             }
 
-            OpenSaveDir(saveDataId);
+            OpenSaveDir(saveDataId, titleId);
+            // OpenSaveDir(saveDataId);
         }
 
-        public static void OpenSaveDir(ulong saveDataId)
+        // public static void OpenSaveDir(ulong saveDataId)
+        public static void OpenSaveDir(ulong saveDataId, ulong titleId=0)
         {
             string saveRootPath = Path.Combine(VirtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
+            
+            VirtualFileSystem.FixSaveFolderAndSymlinks(saveDataId, titleId);
 
-            if (!Directory.Exists(saveRootPath))
-            {
-                // Inconsistent state. Create the directory
-                Directory.CreateDirectory(saveRootPath);
-            }
-
+            
             string committedPath = Path.Combine(saveRootPath, "0");
             string workingPath = Path.Combine(saveRootPath, "1");
 

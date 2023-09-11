@@ -463,6 +463,7 @@ namespace Ryujinx.Ui.App.Common
                         ControlHolder = controlHolder,
                     };
 
+                    // VirtualFileSystem.FixSaveFolderAndSymlinks(titleId);
                     numApplicationsLoaded++;
 
                     OnApplicationAdded(new ApplicationAddedEventArgs

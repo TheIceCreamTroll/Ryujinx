@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Path = System.IO.Path;
+using SaveData = LibHac.Fs.Shim.SaveData;
 
 namespace Ryujinx.HLE.FileSystem
 {
@@ -308,6 +309,60 @@ namespace Ryujinx.HLE.FileSystem
             return Result.Success;
         }
 
+        
+        // Working: Symlinks created on boot, on "View Save Folder (only avalonia tested)"
+        // Not working: On game start. Need to figure out where the code is that does that
+        
+        // Massive TODO - importing from another system - Should work OK? Test when I can
+        // TEST:
+        // 1) Create a blank slate Ryjinx GTK instance and a blank slate Ryujinx Avalonia instance
+        // 2) Launch 2 games in reverse order, so that each installation's saveData links conflict. Create a text file in each with the actual game name to make tracking stuff easier
+        // 2.1) In Avalonia, launch GuP, then Star Wars
+        // 2.2) In GTK, launch Star Wars, then GuP
+        // 3) See if the issue I fear about below comes true (please don't....)
+        //
+        // Result: Copying and pasting a symlink doesn't overwrite the existing symlink's target. Double check with NextCloud sync just to be sure (but 99% sure it's fine)
+        //
+        
+        // THE ABOVE TEST WAS A SUCCESS, WE SHOULDN'T NEED TO DO THE BELOW WORK
+        // I don't think the links will overwrite. Data will be merged as I expected
+        // If we import a bunch of symlinks, they'll still be pointing to the wrong folder
+        // Process would be something like:
+        // 1) Parse list of save folders (this gets the saveDataIds and titleIds)
+        // 2) for each existing save folder, check if a symlink named "TitleId" exists. If it does, check if it resolves to the saveDataId folder Directory.ResolveLinkTarget(path, resolveFinalTarget (just a bool))
+        // 3) But if we've already imported symlinks into psave, the new data would have overwritten the original data
+        //        In that case, would it make sense for psave to be the "real" folder, and have 
+        
+        // TODO - MAJOR TEST - repeat the above test, but delete the contents of one save folder and copy the links of the other one so that it can't auto-merge
+        // If that fails, we'll have to think this through. They would theoretically just be broken, so if:link broken -> if:realsavefolderexists -> fixSymLink
+        
+        // TODO - Create function to prune broken symlinks? Some people might import the saves before the game, which could result in them being deleted accidentally
+        // TODO - do we need to check if the SpaceId is "user"? Some system paths haven't had a programId, so I'll be doing that
+        // Goes inside a loop to replace existing CreateDirectory calls. Not sure it belongs in VirtualFileSystem, but for testing, it's fine
+        public static int FixSaveFolderAndSymlinks(ulong saveDataId, ulong titleId)
+        {
+
+            string saveRootPath = Path.Combine(GetNandPath(), $"user/save/{saveDataId:x16}");
+            string persistentSaveRootPath = Path.Combine(GetNandPath(), $"user/psave/{titleId:x16}"); // TODO - make sure psave is auto-created. Doing it manually rn
+
+            if (!Directory.Exists(saveRootPath))
+            {
+                Directory.CreateDirectory(saveRootPath);
+            }
+
+            if (!Directory.Exists(persistentSaveRootPath))
+            {
+                // Allows saves to more easily be shared between Ryujinx instances (Can finally sync between PC and steamdeck!)
+                Directory.CreateSymbolicLink(persistentSaveRootPath, saveRootPath);
+            }
+            // TODO - if the symlink exists, check that the link resolves to the right folder, and if not, fix it
+            
+            int placeholder = 0; // TODO get an actual return figured out
+            return placeholder;
+        }
+        
+        
+        
         private static Result FixExtraDataInSpaceId(HorizonClient hos, SaveDataSpaceId spaceId)
         {
             Span<SaveDataInfo> info = stackalloc SaveDataInfo[8];
@@ -336,7 +391,12 @@ namespace Ryujinx.HLE.FileSystem
                 for (int i = 0; i < count; i++)
                 {
                     rc = FixExtraData(out bool wasFixNeeded, hos, in info[i]);
-
+                    
+                    if (info[i].SpaceId == SaveDataSpaceId.User)
+                    {
+                        FixSaveFolderAndSymlinks(info[i].SaveDataId, info[i].ProgramId.Value);
+                    }
+                    
                     if (ResultFs.TargetNotFound.Includes(rc))
                     {
                         // If the save wasn't found, try to create the directory for its save data ID
@@ -397,11 +457,13 @@ namespace Ryujinx.HLE.FileSystem
 
                 rc = hos.Fs.GetEntryType(out _, path);
 
+                // TODO - can we delegate this if-block to FoxSaveFolderAndSymlinks?
                 if (ResultFs.PathNotFound.Includes(rc))
                 {
                     rc = hos.Fs.CreateDirectory(path);
                 }
 
+                FixSaveFolderAndSymlinks(info.SaveDataId, info.ProgramId.Value);
                 return rc;
             }
             finally

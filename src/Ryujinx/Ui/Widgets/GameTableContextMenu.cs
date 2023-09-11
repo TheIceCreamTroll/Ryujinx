@@ -140,13 +140,20 @@ namespace Ryujinx.Ui.Widgets
             }
 
             string saveRootPath = System.IO.Path.Combine(VirtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
+            string persistentSaveRootPath = System.IO.Path.Combine(VirtualFileSystem.GetNandPath(), $"user/psave/{_titleId}");
 
             if (!Directory.Exists(saveRootPath))
             {
                 // Inconsistent state. Create the directory
                 Directory.CreateDirectory(saveRootPath);
             }
-
+            
+            if (!Directory.Exists(persistentSaveRootPath))
+            {
+                // Allows saves to more easily be shared between Ryujinx instances
+                Directory.CreateSymbolicLink(persistentSaveRootPath, saveRootPath);
+            }
+            
             string committedPath = System.IO.Path.Combine(saveRootPath, "0");
             string workingPath = System.IO.Path.Combine(saveRootPath, "1");
 
