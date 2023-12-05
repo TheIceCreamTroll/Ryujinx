@@ -1,4 +1,4 @@
-﻿using LibHac.Common;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
@@ -69,7 +69,8 @@ namespace Ryujinx.HLE.Loaders.Processes
         public bool LoadNsp(string path)
         {
             FileStream file = new(path, FileMode.Open, FileAccess.Read);
-            PartitionFileSystem partitionFileSystem = new(file.AsStorage());
+            PartitionFileSystem partitionFileSystem = new();
+            partitionFileSystem.Initialize(file.AsStorage()).ThrowIfFailure();
 
             (bool success, ProcessResult processResult) = partitionFileSystem.TryLoad(_device, path, out string errorMessage);
 

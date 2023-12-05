@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Logging;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Silk.NET.Vulkan;
 using System;
@@ -464,13 +464,14 @@ namespace Ryujinx.Graphics.Vulkan
             return true;
         }
 
-        public Auto<DescriptorSetCollection> GetNewDescriptorSetCollection(
-            VulkanRenderer gd,
-            int commandBufferIndex,
-            int setIndex,
-            out bool isNew)
+        public void UpdateDescriptorCacheCommandBufferIndex(int commandBufferIndex)
         {
-            return _plce.GetNewDescriptorSetCollection(gd, commandBufferIndex, setIndex, out isNew);
+            _plce.UpdateCommandBufferIndex(commandBufferIndex);
+        }
+
+        public Auto<DescriptorSetCollection> GetNewDescriptorSetCollection(int setIndex, out bool isNew)
+        {
+            return _plce.GetNewDescriptorSetCollection(setIndex, out isNew);
         }
 
         protected virtual void Dispose(bool disposing)

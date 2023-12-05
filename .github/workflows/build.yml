@@ -30,14 +30,14 @@ jobs:
 
         - os: windows-latest
           OS_NAME: Windows x64
-          DOTNET_RUNTIME_IDENTIFIER: win10-x64
+          DOTNET_RUNTIME_IDENTIFIER: win-x64
           RELEASE_ZIP_OS_NAME: win_x64
 
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
           
@@ -110,7 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
 

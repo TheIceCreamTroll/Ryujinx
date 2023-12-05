@@ -1,4 +1,4 @@
-﻿using Ryujinx.Common.Memory;
+using Ryujinx.Common.Memory;
 using Silk.NET.Vulkan;
 
 namespace Ryujinx.Graphics.Vulkan
@@ -146,7 +146,10 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void RecordScissor(Vk api, CommandBuffer commandBuffer)
         {
-            api.CmdSetScissor(commandBuffer, 0, (uint)ScissorsCount, _scissors.AsSpan());
+            if (ScissorsCount != 0)
+            {
+                api.CmdSetScissor(commandBuffer, 0, (uint)ScissorsCount, _scissors.AsSpan());
+            }
         }
 
         private readonly void RecordStencilMasks(Vk api, CommandBuffer commandBuffer)

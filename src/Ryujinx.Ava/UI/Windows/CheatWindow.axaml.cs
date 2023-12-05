@@ -1,4 +1,4 @@
-﻿using Avalonia.Collections;
+using Avalonia.Collections;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.HLE.FileSystem;
@@ -17,7 +17,7 @@ namespace Ryujinx.Ava.UI.Windows
         private readonly string _enabledCheatsPath;
         public bool NoCheatsFound { get; }
 
-        private AvaloniaList<CheatsList> LoadedCheats { get; }
+        public AvaloniaList<CheatsList> LoadedCheats { get; }
 
         public string Heading { get; }
         public string BuildId { get; }

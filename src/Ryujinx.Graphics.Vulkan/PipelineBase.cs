@@ -1,4 +1,4 @@
-﻿using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 using Silk.NET.Vulkan;
 using System;
@@ -149,10 +149,22 @@ namespace Ryujinx.Graphics.Vulkan
                 DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
             };
 
+            PipelineStageFlags pipelineStageFlags = PipelineStageFlags.VertexShaderBit | PipelineStageFlags.FragmentShaderBit;
+
+            if (Gd.Capabilities.SupportsGeometryShader)
+            {
+                pipelineStageFlags |= PipelineStageFlags.GeometryShaderBit;
+            }
+
+            if (Gd.Capabilities.SupportsTessellationShader)
+            {
+                pipelineStageFlags |= PipelineStageFlags.TessellationControlShaderBit | PipelineStageFlags.TessellationEvaluationShaderBit;
+            }
+
             Gd.Api.CmdPipelineBarrier(
                 CommandBuffer,
-                PipelineStageFlags.FragmentShaderBit,
-                PipelineStageFlags.FragmentShaderBit,
+                pipelineStageFlags,
+                pipelineStageFlags,
                 0,
                 1,
                 memoryBarrier,
@@ -177,7 +189,7 @@ namespace Ryujinx.Graphics.Vulkan
                 PipelineStageFlags.AllCommandsBit,
                 0,
                 1,
-                new ReadOnlySpan<MemoryBarrier>(memoryBarrier),
+                new ReadOnlySpan<MemoryBarrier>(in memoryBarrier),
                 0,
                 ReadOnlySpan<BufferMemoryBarrier>.Empty,
                 0,
